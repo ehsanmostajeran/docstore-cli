@@ -78,7 +78,12 @@ func main() {
 			js, _ := json.MarshalIndent(&doc, "", "    ")
 			fmt.Printf("%s\n", js)
 		case strings.HasPrefix(line, "query"):
-			data, err := col.Iter()
+			payload := strings.Replace(line, "query", "", 1)
+			q := map[string]interface{}{}
+			if err := json.Unmarshal([]byte(payload), &q); err != nil {
+				panic(err)
+			}
+			data, err := col.Iter(q)
 			if err != nil {
 				fmt.Printf("error: %s\n", err)
 			}
