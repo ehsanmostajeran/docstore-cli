@@ -11,22 +11,28 @@ import (
 
 // FIXME(ts) add history support
 
-var completer = readline.NewPrefixCompleter(
-	// readline.PcItem("say",
-	// 	readline.PcItem("hello"),
-	// 	readline.PcItem("bye"),
-	// ),
-	readline.PcItem("query"),
-	readline.PcItem("get"),
-	readline.PcItem("collection"),
-	readline.PcItem("help"),
-)
-
 func main() {
 	dstore := docstore.New("")
+	cols, err := dstore.Collections()
+	if err != nil {
+		panic(err)
+	}
+	cpls := []*readline.PrefixCompleter{}
+	for _, col := range cols {
+		cpls = append(cpls, readline.PcItem(col))
+	}
 	rl, err := readline.NewEx(&readline.Config{
-		Prompt:       "docstore > ",
-		AutoComplete: completer,
+		Prompt: "docstore > ",
+		AutoComplete: readline.NewPrefixCompleter(
+			readline.PcItem("collection", cpls...),
+			// readline.PcItem("say",
+			// 	readline.PcItem("hello"),
+			// 	readline.PcItem("bye"),
+			// ),
+			readline.PcItem("query"),
+			readline.PcItem("get"),
+			readline.PcItem("help"),
+		),
 	})
 	if err != nil {
 		panic(err)
@@ -72,7 +78,12 @@ func main() {
 			js, _ := json.MarshalIndent(&doc, "", "    ")
 			fmt.Printf("%s\n", js)
 		case strings.HasPrefix(line, "query"):
-
+			data, err := col.Iter()
+			if err != nil {
+				fmt.Printf("error: %s\n", err)
+			}
+			js, _ := json.MarshalIndent(&data, "", "    ")
+			fmt.Printf("%s\n", js)
 		default:
 			println(line)
 		}
