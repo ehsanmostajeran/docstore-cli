@@ -25,6 +25,7 @@ func main() {
 		Prompt: "docstore > ",
 		AutoComplete: readline.NewPrefixCompleter(
 			readline.PcItem("collection", cpls...),
+			readline.PcItem("collections"),
 			// readline.PcItem("say",
 			// 	readline.PcItem("hello"),
 			// 	readline.PcItem("bye"),
@@ -46,6 +47,10 @@ func main() {
 			break
 		}
 		switch {
+		case strings.HasPrefix(line, "collections"):
+			for _, col := range cols {
+				println(col)
+			}
 		case strings.HasPrefix(line, "collection"):
 			args := strings.Split(line, " ")
 			// A col is specified
@@ -79,6 +84,9 @@ func main() {
 			fmt.Printf("%s\n", js)
 		case strings.HasPrefix(line, "query"):
 			payload := strings.Replace(line, "query", "", 1)
+			if len(payload) < 2 {
+				payload = "{}"
+			}
 			q := map[string]interface{}{}
 			if err := json.Unmarshal([]byte(payload), &q); err != nil {
 				panic(err)
@@ -89,9 +97,13 @@ func main() {
 			}
 			js, _ := json.MarshalIndent(&data, "", "    ")
 			fmt.Printf("%s\n", js)
+		case line == "help":
+			println("collections => list all collections")
+			println("collection [collection] => set/display current collection")
+			println("query [query] => returns query result")
+			println("insert [json doc] => insert the given doc (JSON expected)")
 		default:
 			println(line)
 		}
-		// println(line)
 	}
 }
